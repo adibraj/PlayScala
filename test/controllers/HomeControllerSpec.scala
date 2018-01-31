@@ -20,7 +20,6 @@ class HomeControllerSpec
     with Injecting {
 
   "UserController Register User POST" should {
-
     " add the new user" in {
       val controller = inject[UserController]
 
@@ -77,8 +76,8 @@ class HomeControllerSpec
       }
     }
 
+    //Test Case to Check The EndPoint Returns the Correct User
     "UserController getUserByName" should {
-
       "Return Appropriate User with help of userName" in {
         val controller = inject[UserController]
         val home = controller
