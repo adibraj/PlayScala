@@ -11,6 +11,9 @@ libraryDependencies += guice
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
 libraryDependencies += ws
 libraryDependencies += "com.typesafe.play" %% "play-ahc-ws-standalone" % "1.1.3"
+libraryDependencies ++= Seq(
+  "org.scalatestplus.play" %% "scalatestplus-play" % "x.x.x" % "test"
+)
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.synerzip.controllers._"
 

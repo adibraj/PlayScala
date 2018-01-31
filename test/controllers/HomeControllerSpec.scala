@@ -2,6 +2,9 @@ package controllers
 
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
+import play.api.Logger
+import play.api.libs.json.{JsArray, JsValue, Json}
+import play.api.mvc.AnyContentAsJson
 import play.api.test.Helpers._
 import play.api.test._
 
@@ -11,20 +14,90 @@ import play.api.test._
   *
   * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
   */
-class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
+class HomeControllerSpec
+    extends PlaySpec
+    with GuiceOneAppPerTest
+    with Injecting {
 
-  "HomeController GET" should {
+  "UserController Register User POST" should {
 
-    "render the index page from a new instance of controller" in {
-      val controller = new HomeController(stubControllerComponents())
-      val home = controller.index().apply(FakeRequest(GET, "/"))
+    " add the new user" in {
+      val controller = inject[UserController]
 
+      val home = controller
+        .registerUser()
+        .apply(
+          FakeRequest(
+            POST,
+            "/user/add",
+            FakeHeaders(),
+            AnyContentAsJson(Json.parse(
+              """{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}}"""))))
+      Logger.debug(contentAsString(home))
       status(home) mustBe OK
-      contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include("Welcome to Play")
+      contentAsString(home) mustBe ("User Added Succesfull")
     }
 
-    "render the index page from the application" in {
+//To check All the users i have added 2 users and checked whether getAll returns the same
+    "get All users " should {
+      "return all the users in the database" in {
+        val controller = inject[UserController]
+        val add1 = controller
+          .registerUser()
+          .apply(
+            FakeRequest(
+              POST,
+              "/user/add",
+              FakeHeaders(),
+              AnyContentAsJson(Json.parse(
+                """{"user": {"firstName": "asd","lastName": "Rajiwate","mobile": 9665048908}}"""))))
+
+        val add2 = controller
+          .registerUser()
+          .apply(
+            FakeRequest(
+              POST,
+              "/user/add",
+              FakeHeaders(),
+              AnyContentAsJson(Json.parse(
+                """{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}}"""))))
+
+        val home = controller
+          .getUsers()
+          .apply(FakeRequest())
+
+        val users = contentAsJson(home).as[JsArray]
+
+        Logger.debug("Size is :-    " + users.value.size)
+        Logger.debug(contentAsString(home))
+        status(home) mustBe OK
+        users.value.size mustBe (2)
+        contentAsJson(home) mustBe (Json.parse(
+          """[{"user": {"firstName": "asd","lastName": "Rajiwate","mobile": 9665048908}},{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}} ] """))
+      }
+    }
+
+    "UserController getUserByName" should {
+
+      "Return Appropriate User with help of userName" in {
+        val controller = inject[UserController]
+        val home = controller
+          .registerUser()
+          .apply(
+            FakeRequest(
+              POST,
+              "/user/add",
+              FakeHeaders(),
+              AnyContentAsJson(Json.parse(
+                """{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}}"""))))
+        val user = controller.getUserByName("Adib").apply(FakeRequest())
+        status(user) mustBe OK
+        contentAsJson(user) mustBe (Json.parse(
+          """{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}}"""))
+
+      }
+    }
+    /*"render the index page from the application" in {
       val controller = inject[HomeController]
       val home = controller.index().apply(FakeRequest(GET, "/"))
 
@@ -40,6 +113,6 @@ class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include("Welcome to Play")
-    }
+    }*/
   }
 }

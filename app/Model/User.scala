@@ -7,7 +7,7 @@ import play.api.mvc.AnyContent
 //Mobile should be of 10 Digit
 case class User(val firstName: String, val lastName: String, val mobile: Long)
 
-class UserValidation {
+object UserValidation {
   implicit val nameRead = ((JsPath \ "user" \ "firstName"))
     .read[String](minLength[String](3))
     .and((JsPath \ "user" \ "lastName").read[String](minLength[String](3)))

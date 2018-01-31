@@ -1,25 +1,24 @@
 package Service
 
-import javax.inject.Inject
-
 import Model.{User, UserValidation}
+import UserValidation._
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.AnyContent
 
 import scala.collection.mutable.ArrayBuffer
 
-class UserService @Inject()(user: UserValidation) {
+class UserService {
   var listUser: ArrayBuffer[User] = new ArrayBuffer[User]()
 
   def addUser(jsValue: AnyContent): Boolean = {
-    val newUser = user.validateObject(jsValue);
+    val newUser = validateObject(jsValue);
     newUser match {
       case Left(a)  => false
       case Right(a) => { listUser += (a); true }
     }
   }
   def getAllUsers(): JsValue = {
-    Json.toJson(listUser.map(u => Json.toJson(u)(user.nameWrite)))
+    Json.toJson(listUser.map(u => Json.toJson(u)(nameWrite)))
   }
 
   def getUserByUserName(name: String): Option[JsValue] = {
@@ -27,7 +26,7 @@ class UserService @Inject()(user: UserValidation) {
     if (userFound.length < 1)
       None
     else
-      Some(Json.toJson(userFound.head)(user.nameWrite))
+      Some(Json.toJson(userFound.head)(nameWrite))
 
   }
 
@@ -36,7 +35,7 @@ class UserService @Inject()(user: UserValidation) {
     if (userFound.length < 1)
       None
     else
-      Some(Json.toJson(userFound.head)(user.nameWrite))
+      Some(Json.toJson(userFound.head)(nameWrite))
 
   }
 
