@@ -1,10 +1,11 @@
 package controllers
 
+import Model.User
+import Model.UserValidation._
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.Logger
-import play.api.libs.json.{JsArray, JsValue, Json}
-import play.api.mvc.AnyContentAsJson
+import play.api.libs.json.{JsArray, Json}
 import play.api.test.Helpers._
 import play.api.test._
 
@@ -14,27 +15,23 @@ import play.api.test._
   *
   * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
   */
-class HomeControllerSpec
+class UserControllerTest
     extends PlaySpec
     with GuiceOneAppPerTest
     with Injecting {
+  val user1 = User("Adib", "Rajiwate", 9665048908L)
+  val user2 = User("Xyz", "Abc", 96698356L)
 
   "UserController Register User POST" should {
     " add the new user" in {
       val controller = inject[UserController]
-
       val home = controller
         .registerUser()
         .apply(
-          FakeRequest(
-            POST,
-            "/user/add",
-            FakeHeaders(),
-            AnyContentAsJson(Json.parse(
-              """{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}}"""))))
+          FakeRequest(POST, "/user/add", FakeHeaders(), Json.toJson(user1)))
       Logger.debug(contentAsString(home))
       status(home) mustBe OK
-      contentAsString(home) mustBe ("User Added Succesfull")
+      contentAsJson(home) mustBe (Json.toJson(user1))
     }
 
 //To check All the users i have added 2 users and checked whether getAll returns the same
@@ -44,35 +41,22 @@ class HomeControllerSpec
         val add1 = controller
           .registerUser()
           .apply(
-            FakeRequest(
-              POST,
-              "/user/add",
-              FakeHeaders(),
-              AnyContentAsJson(Json.parse(
-                """{"user": {"firstName": "asd","lastName": "Rajiwate","mobile": 9665048908}}"""))))
-
+            FakeRequest(POST, "/user/add", FakeHeaders(), Json.toJson(user1)))
         val add2 = controller
           .registerUser()
           .apply(
-            FakeRequest(
-              POST,
-              "/user/add",
-              FakeHeaders(),
-              AnyContentAsJson(Json.parse(
-                """{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}}"""))))
-
+            FakeRequest(POST, "/user/add", FakeHeaders(), Json.toJson(user2)))
         val home = controller
           .getUsers()
           .apply(FakeRequest())
 
         val users = contentAsJson(home).as[JsArray]
-
         Logger.debug("Size is :-    " + users.value.size)
         Logger.debug(contentAsString(home))
         status(home) mustBe OK
         users.value.size mustBe (2)
-        contentAsJson(home) mustBe (Json.parse(
-          """[{"user": {"firstName": "asd","lastName": "Rajiwate","mobile": 9665048908}},{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}} ] """))
+        contentAsJson(home) mustBe (Json.arr(Json.toJson(user1),
+                                             Json.toJson(user2)))
       }
     }
 
@@ -83,17 +67,11 @@ class HomeControllerSpec
         val home = controller
           .registerUser()
           .apply(
-            FakeRequest(
-              POST,
-              "/user/add",
-              FakeHeaders(),
-              AnyContentAsJson(Json.parse(
-                """{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}}"""))))
-        val user = controller.getUserByName("Adib").apply(FakeRequest())
-        status(user) mustBe OK
-        contentAsJson(user) mustBe (Json.parse(
-          """{"user": {"firstName": "Adib","lastName": "Rajiwate","mobile": 9665048908}}"""))
+            FakeRequest(POST, "/user/add", FakeHeaders(), Json.toJson(user1)))
+        val response = controller.getUserByName("Adib").apply(FakeRequest())
+        status(response) mustBe OK
 
+        contentAsJson(response) mustBe (Json.toJson(user1))
       }
     }
     /*"render the index page from the application" in {

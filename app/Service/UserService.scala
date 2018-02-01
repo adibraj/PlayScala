@@ -1,41 +1,30 @@
 package Service
 
-import Model.{User, UserValidation}
-import UserValidation._
-import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.AnyContent
+import Model.User
 
 import scala.collection.mutable.ArrayBuffer
 
 class UserService {
   var listUser: ArrayBuffer[User] = new ArrayBuffer[User]()
 
-  def addUser(jsValue: AnyContent): Boolean = {
-    val newUser = validateObject(jsValue);
-    newUser match {
-      case Left(a)  => false
-      case Right(a) => { listUser += (a); true }
-    }
-  }
-  def getAllUsers(): JsValue = {
-    Json.toJson(listUser.map(u => Json.toJson(u)(nameWrite)))
+  def addUser(user: User): Option[User] = {
+    listUser += (user)
+    Some(user)
   }
 
-  def getUserByUserName(name: String): Option[JsValue] = {
-    val userFound = (for (u <- listUser if (u.firstName.equals(name))) yield u)
-    if (userFound.length < 1)
-      None
-    else
-      Some(Json.toJson(userFound.head)(nameWrite))
-
+  def getAllUsers(): List[User] = {
+    listUser.toList
   }
 
-  def getUserByMobile(mobile: Long): Option[JsValue] = {
-    val userFound = (for (u <- listUser if (u.mobile.equals(mobile))) yield u)
-    if (userFound.length < 1)
-      None
-    else
-      Some(Json.toJson(userFound.head)(nameWrite))
+  def getUserByUserName(name: String): Option[User] = {
+
+    val userFound = listUser.find(u => u.firstName.equals(name))
+    userFound
+  }
+
+  def getUserByMobile(mobile: Long): Option[User] = {
+    val userFound = listUser.find(u => u.mobile.equals(mobile))
+    userFound
 
   }
 
