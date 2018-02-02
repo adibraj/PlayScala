@@ -19,8 +19,8 @@ class UserControllerTest
     extends PlaySpec
     with GuiceOneAppPerTest
     with Injecting {
-  val user1 = User("Adib", "Rajiwate", 9665048908L)
-  val user2 = User("Xyz", "Abc", 96698356L)
+  val user1 = User(None,"Adib", "Rajiwate", 9665048908L)
+  val user2 = User(None,"Xyz", "Abc", 96698356L)
 
   "UserController Register User POST" should {
     " add the new user" in {

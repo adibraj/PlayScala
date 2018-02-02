@@ -14,6 +14,8 @@ libraryDependencies += "com.typesafe.play" %% "play-ahc-ws-standalone" % "1.1.3"
 libraryDependencies ++= Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "x.x.x" % "test"
 )
+libraryDependencies += jdbc
+libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.41"
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.synerzip.controllers._"
 

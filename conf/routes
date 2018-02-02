@@ -12,3 +12,4 @@ POST    /user/add                   controllers.UserController.registerUser
 GET     /user/getall                controllers.UserController.getUsers
 GET     /user/:name                 controllers.UserController.getUserByName(name)
 GET     /user/mobile/:mobile        controllers.UserController.getUserByMobile(mobile:Long)
+PUT    /user/:id                  controllers.UserController.editUser(id: Int)
