@@ -3,97 +3,55 @@ package Service
 import javax.inject.Inject
 
 import Model.User
-import play.api.Logger
-import play.api.db._
+import play.api.db.slick.DatabaseConfigProvider
+import slick.jdbc.JdbcProfile
+import slick.lifted
 
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.Future
 
-class UserService @Inject()(dbApi: DBApi) {
+class UserService @Inject()(val dbConfigProvider: DatabaseConfigProvider) {
+
+  val dbConfig = dbConfigProvider.get[JdbcProfile]
+
+  import dbConfig._
+  import profile.api._
+  class UserTableDef(tag: Tag) extends Table[User](tag, "user") {
+    def id = column[Option[Int]]("id", O.PrimaryKey, O.AutoInc)
+    def firstName = column[String]("first_name")
+    def lastName = column[String]("last_name")
+    def mobile = column[Long]("mobile")
+
+    override def * =
+      (id, firstName, lastName, mobile) <> (User.tupled, User.unapply)
+  }
+  val users = lifted.TableQuery[UserTableDef]
   var listUser: ArrayBuffer[User] = new ArrayBuffer[User]()
-  val db = dbApi.database("default")
 
-  def addUser(user: User): Option[User] = {
-    db.withConnection(implicit connection => {
-      val st = connection.prepareStatement(
-        "insert into user (first_name,last_name,mobile) values( ?,?,?)")
-      st.setString(1, user.firstName)
-      st.setString(2, user.lastName)
-      st.setLong(3, user.mobile)
-      val insert = st.executeUpdate()
-      Logger.debug(insert.toString)
-      if (insert == 1)
-        return Some(user)
-      else
-        None
-    })
+  def addUser(user: User): Future[User] = {
+    db.run(
+      (users returning users
+        .map(_.id) into ((user, id) => user.copy(id = id))) += user)
   }
 
-  def getAllUsers(): List[User] = {
-    var listUser: ArrayBuffer[User] = new ArrayBuffer[User]()
-    db.withConnection(connection => {
-      val st = connection.prepareStatement("select * from user")
-      val result = st.executeQuery()
-      while (result.next()) {
-        val user = User(Some(result.getInt(1)),
-                        result.getString("first_name"),
-                        result.getString("last_name"),
-                        result.getLong("mobile"))
-        listUser += user
-      }
-    })
-    listUser.toList
+  def getAllUsers(): Future[Seq[User]] = {
+    db.run(users.result)
   }
 
-  def getUserByUserName(name: String): Option[User] = {
-    db.withConnection(connection => {
-      val st =
-        connection.prepareStatement("select * from user where first_name=?")
-      st.setString(1, name)
-      val result = st.executeQuery()
-      if (result.first())
-        return Some(
-          User(Some(result.getInt(1)),
-               result.getString("first_name"),
-               result.getString("last_name"),
-               result.getLong("mobile")))
-      None
-    })
+  def getUserByUserName(name: String): Future[Option[User]] = {
+    val user = users.filter(_.firstName === (name))
+    db.run(user.result.headOption)
   }
 
-  def getUserByMobile(mobile: Long): Option[User] = {
-    db.withConnection(connection => {
-      val st = connection.prepareStatement("select * from user where mobile=?")
-      st.setLong(1, mobile)
-      val result = st.executeQuery()
-      if (result.first())
-        return Some(
-          User(Some(result.getInt(1)),
-               result.getString("first_name"),
-               result.getString("last_name"),
-               result.getLong("mobile")))
-      None
-    })
+  def getUserByMobile(mobile: Long): Future[Option[User]] = {
+    val user = users.filter(_.mobile === mobile)
+    db.run(user.result.headOption)
   }
 
-  def editUser(id: Int, user: User): Option[User] = {
-    db.withConnection(connection => {
-      val st = connection.prepareStatement("select * from user where id=?")
-      st.setInt(1, id);
-      val result = st.executeQuery()
-      if (result.first()) {
-        val stm = connection.prepareStatement(
-          "update user set first_name=?, last_name=?,mobile=? where id=?")
-        stm.setInt(4, id);
-        stm.setString(1, user.firstName)
-        stm.setString(2, user.lastName)
-        stm.setLong(3, user.mobile)
-        val result = stm.executeUpdate()
-        if (result == 1)
-          return Some(user)
-        None
-      }
-      None
-    })
+  def editUser(id: Int, user: User): Future[Int] = {
+    val dbUser = for { user <- users if user.id === id } yield user
+    db.run(dbUser.update(user.copy(id = Some(id))))
+
   }
 
 }

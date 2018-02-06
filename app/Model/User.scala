@@ -3,6 +3,8 @@ package Model
 import play.api.libs.functional.syntax._
 import play.api.libs.json.JsPath
 import play.api.libs.json.Reads._
+
+
 //Mobile should be of 10 Digit
 case class User(val id: Option[Int],
                 val firstName: String,
